@@ -1,0 +1,20 @@
+
+sudo docker exec -it root_kafka_1 bash
+sudo docker exec -it root_master_1 bash
+
+kafka-topics --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 10 --topic input
+kafka-topics --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 10 --topic output
+kafka-topics --zookeeper zookeeper:2181 --alter --topic input --config retention.ms=1
+kafka-topics --zookeeper zookeeper:2181 --alter --topic output --config retention.ms=1
+
+clear;clear;kafka-console-producer --broker-list kafka:9092 --topic input
+clear;clear;kafka-console-consumer --bootstrap-server kafka:9092 --topic input --from-beginning
+clear;clear;kafka-console-consumer --bootstrap-server kafka:9092 --topic output --from-beginning
+
+sudo docker cp test.py root_master_1:/usr/spark-2.4.0/bin/
+sudo docker cp graph.py root_master_1:/usr/spark-2.4.0/bin/
+
+clear;clear;spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.4.0 --repositories http://central.maven.org/maven2 test.py kafka:9092 input output 6 1 10 1 15
+
+{"cid": "LTP1.Windows", "metricName": "health", "value": 5}
+{"cid": "LTP3.Windows", "metricName": "health", "value": 0}
